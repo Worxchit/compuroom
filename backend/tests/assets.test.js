@@ -22,6 +22,21 @@ describe('Assets API', () => {
     expect(res.body[0].asset_code).toBe('PC-001');
   });
 
+  it('GET /api/assets?room=... filters by room using a parameterized query', async () => {
+    pool.query.mockResolvedValueOnce({
+      rows: [{ id: 2, asset_code: 'PC-002', brand: 'HP', model: 'ProDesk 600 G6', room: 'Lab A102' }],
+    });
+
+    const res = await request(app).get('/api/assets').query({ room: 'Lab A102' });
+
+    expect(res.statusCode).toBe(200);
+    expect(pool.query).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE room = $1'),
+      ['Lab A102']
+    );
+    expect(res.body[0].room).toBe('Lab A102');
+  });
+
   it('GET /api/assets/:id returns 404 when asset not found', async () => {
     pool.query.mockResolvedValueOnce({ rows: [] });
 
