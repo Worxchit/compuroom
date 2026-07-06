@@ -2,7 +2,21 @@ const pool = require('../config/db');
 
 async function listAssets(req, res) {
   try {
-    const result = await pool.query('SELECT * FROM assets ORDER BY id ASC');
+    const { room, status } = req.query;
+    const conditions = [];
+    const values = [];
+
+    if (room) {
+      values.push(room);
+      conditions.push(`room = $${values.length}`);
+    }
+    if (status) {
+      values.push(status);
+      conditions.push(`status = $${values.length}`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const result = await pool.query(`SELECT * FROM assets ${where} ORDER BY id ASC`, values);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
